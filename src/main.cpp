@@ -8,6 +8,7 @@ void setup()
 
 void loop()
 {
-    Serial.printf("loop: %d\n", 111);
-    delay(30);
+    Serial.println("1111");
+
+    delay(500);
 }
