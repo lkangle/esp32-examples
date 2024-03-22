@@ -12,32 +12,35 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "/Users/likangle/Desktop/McuProjects/esp32s3-demo/.pio/build/esp32-s3-devkitc-1/firmware.elf",
-            "projectEnvName": "esp32-s3-devkitc-1",
-            "toolchainBinDir": "/Users/likangle/.platformio/packages/toolchain-xtensa-esp32s3/bin",
+            "executable": "/Users/likangle/Desktop/McuProjects/esp32s3-demo/.pio/build/pico/firmware.elf",
+            "projectEnvName": "pico",
+            "toolchainBinDir": "/Users/likangle/.platformio/packages/toolchain-gccarmnoneeabi/bin",
             "internalConsoleOptions": "openOnSessionStart",
+            "svdPath": "/Users/likangle/.platformio/platforms/raspberrypi/misc/svd/rp2040.svd",
             "preLaunchTask": {
                 "type": "PlatformIO",
-                "task": "Pre-Debug"
+                "task": "Pre-Debug (pico)"
             }
         },
         {
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "/Users/likangle/Desktop/McuProjects/esp32s3-demo/.pio/build/esp32-s3-devkitc-1/firmware.elf",
-            "projectEnvName": "esp32-s3-devkitc-1",
-            "toolchainBinDir": "/Users/likangle/.platformio/packages/toolchain-xtensa-esp32s3/bin",
-            "internalConsoleOptions": "openOnSessionStart"
+            "executable": "/Users/likangle/Desktop/McuProjects/esp32s3-demo/.pio/build/pico/firmware.elf",
+            "projectEnvName": "pico",
+            "toolchainBinDir": "/Users/likangle/.platformio/packages/toolchain-gccarmnoneeabi/bin",
+            "internalConsoleOptions": "openOnSessionStart",
+            "svdPath": "/Users/likangle/.platformio/platforms/raspberrypi/misc/svd/rp2040.svd"
         },
         {
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (without uploading)",
-            "executable": "/Users/likangle/Desktop/McuProjects/esp32s3-demo/.pio/build/esp32-s3-devkitc-1/firmware.elf",
-            "projectEnvName": "esp32-s3-devkitc-1",
-            "toolchainBinDir": "/Users/likangle/.platformio/packages/toolchain-xtensa-esp32s3/bin",
+            "executable": "/Users/likangle/Desktop/McuProjects/esp32s3-demo/.pio/build/pico/firmware.elf",
+            "projectEnvName": "pico",
+            "toolchainBinDir": "/Users/likangle/.platformio/packages/toolchain-gccarmnoneeabi/bin",
             "internalConsoleOptions": "openOnSessionStart",
+            "svdPath": "/Users/likangle/.platformio/platforms/raspberrypi/misc/svd/rp2040.svd",
             "loadMode": "manual"
         }
     ]
