@@ -1,46 +1,36 @@
 #include <Arduino.h>
-#include "hardware/flash.h"
+#include <camera.h>
+#include <lcd.h>
 
-using namespace arduino;
-
-#define LED_PIN 25
-
-int count = 0;
+static LGFX lcd;
 
 void setup()
 {
     Serial.begin(9600);
-    Serial.println("Hello World");
+    if (esp_camera_init(&camera_config) != ESP_OK)
+    {
+        Serial.println("Camera Init Failed");
+        return;
+    }
+    Serial.println("Camera Init Succeed");
 
-    pinMode(LED_PIN, OUTPUT);
+    lcd.init();
+    lcd.setRotation(0);
+    lcd.setBrightness(200);
+    lcd.fillScreen(TFT_BLACK);
+    lcd.setColorDepth(16);
 }
 
 void loop()
 {
-    void *m = malloc(40960);
-    if (m != nullptr)
+    camera_fb_t *fb = esp_camera_fb_get();
+    if (!fb)
     {
-        Serial.println("Memory allocated ok.");
-        free(m);
-    }
-    else
-    {
-        Serial.println("Memory allocation failed");
+        Serial.println("Camera Capture Failed");
+        return;
     }
 
-    Serial.println(String("--> Loop count: ") + String(count++));
+    lcd.pushImage(0, 0, fb->width, fb->height, (uint16_t *)(fb->buf));
 
-    for (int i = 0; i < 256; i++)
-    {
-        analogWrite(LED_PIN, i);
-        delay(1);
-    }
-
-    for (int i = 255; i >= 0; i--)
-    {
-        analogWrite(LED_PIN, i);
-        delay(1);
-    }
-
-    delay(500);
+    esp_camera_fb_return(fb);
 }
