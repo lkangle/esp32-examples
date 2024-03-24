@@ -41,7 +41,7 @@ void setup()
     gfx->setUTF8Print(true);
     gfx->setTextColor(WHITE);
 
-    gfx->setCursor(0, 30);
+    gfx->setCursor(0, 20);
     gfx->print("Hello 世界!");
 
     gfx->setCursor(0, 0);
@@ -57,24 +57,21 @@ void loop()
         return;
     }
 
-    long end_ms = millis();
-    Serial.printf("Camera Get Time: %ldms\n", end_ms - start_ms);
+    Serial.printf("size: %u, time: %lums\n", fb->len, millis() - start_ms);
 
-    int dst_width = 240;
-    int dst_height = 175;
+    // int dst_width = 240;
+    // int dst_height = 175;
 
-    uint16_t *dst = (uint16_t *)malloc(dst_width * dst_height * sizeof(uint16_t));
-    if (dst == nullptr)
-    {
-        Serial.println("Memory allocation failed");
-        return;
-    }
-    scaleImage((uint16_t *)fb->buf, dst, fb->width, fb->height, dst_width, dst_height);
+    // uint16_t *dst = (uint16_t *)malloc(dst_width * dst_height * sizeof(uint16_t));
+    // if (dst == nullptr)
+    // {
+    //     Serial.println("Memory allocation failed");
+    //     return;
+    // }
+    // scaleImage((uint16_t *)fb->buf, dst, fb->width, fb->height, dst_width, dst_height);
 
-    Serial.printf("Scale Time: %ldms\n", millis() - end_ms);
+    // gfx->draw16bitBeRGBBitmap(0, (240 - dst_height) / 2, dst, dst_width, dst_height);
 
-    gfx->draw16bitBeRGBBitmap(0, (240 - dst_height) / 2, dst, dst_width, dst_height);
-
-    free(dst);
+    // free(dst);
     esp_camera_fb_return(fb);
 }

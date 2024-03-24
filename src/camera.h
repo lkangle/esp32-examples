@@ -72,15 +72,19 @@ static camera_config_t camera_config2 = {
     .pin_href = CAM_PIN_HREF,
     .pin_pclk = CAM_PIN_PCLK,
 
-    .xclk_freq_hz = 20000000,
+    .xclk_freq_hz = 40000000,
     .ledc_timer = LEDC_TIMER_0,
     .ledc_channel = LEDC_CHANNEL_0,
 
-    .pixel_format = PIXFORMAT_RGB565, // YUV422,GRAYSCALE,RGB565,JPEG
-    .frame_size = FRAMESIZE_SVGA,
+    .pixel_format = PIXFORMAT_JPEG, // YUV422,GRAYSCALE,RGB565,JPEG
+    .frame_size = FRAMESIZE_SVGA,   // FRAMESIZE_CIF,      // 400x296    33ms
+                                    // FRAMESIZE_HVGA,     // 480x320    67ms
+                                    // FRAMESIZE_SVGA,     // 800x600    67ms
+                                    // FRAMESIZE_HD,       // 1280x720   133ms
+                                    // FRAMESIZE_UXGA,     // 1600x1200  133ms
 
-    // .jpeg_quality = 5,                 // 0-63 lower number means higher quality
-    .fb_count = 4,                     // if fb_count more than one, the driver will work in continuous mode.
+    .jpeg_quality = 10,                // 0-63 lower number means higher quality
+    .fb_count = 2,                     // if fb_count more than one, the driver will work in continuous mode.
     .fb_location = CAMERA_FB_IN_PSRAM, // esp32 s3 使用psram
     .grab_mode = CAMERA_GRAB_LATEST    // CAMERA_GRAB_LATEST. Sets when buffers should be filled
 };
