@@ -48,7 +48,7 @@ static camera_config_t camera_config = {
     .frame_size = FRAMESIZE_240X240,
 
     // .jpeg_quality = 5,                 // 0-63 lower number means higher quality
-    .fb_count = 10,                    // if fb_count more than one, the driver will work in continuous mode.
+    .fb_count = 5,                     // if fb_count more than one, the driver will work in continuous mode.
     .fb_location = CAMERA_FB_IN_PSRAM, // esp32没有psram，所以只能使用DRAM
     .grab_mode = CAMERA_GRAB_LATEST    // CAMERA_GRAB_LATEST. Sets when buffers should be filled
 };
@@ -77,10 +77,10 @@ static camera_config_t camera_config2 = {
     .ledc_channel = LEDC_CHANNEL_0,
 
     .pixel_format = PIXFORMAT_RGB565, // YUV422,GRAYSCALE,RGB565,JPEG
-    .frame_size = FRAMESIZE_UXGA,
+    .frame_size = FRAMESIZE_SVGA,
 
     // .jpeg_quality = 5,                 // 0-63 lower number means higher quality
     .fb_count = 4,                     // if fb_count more than one, the driver will work in continuous mode.
-    .fb_location = CAMERA_FB_IN_PSRAM, // esp32没有psram，所以只能使用DRAM
+    .fb_location = CAMERA_FB_IN_PSRAM, // esp32 s3 使用psram
     .grab_mode = CAMERA_GRAB_LATEST    // CAMERA_GRAB_LATEST. Sets when buffers should be filled
 };
