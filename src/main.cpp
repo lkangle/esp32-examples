@@ -47,6 +47,9 @@ void setup()
     gfx->setCursor(0, 0);
 }
 
+time_t prev = 0;
+int fps = 0;
+
 void loop()
 {
     long start_ms = millis();
@@ -57,7 +60,17 @@ void loop()
         return;
     }
 
-    Serial.printf("size: %u, time: %lums\n", fb->len, millis() - start_ms);
+    if (fb->timestamp.tv_sec != prev)
+    {
+        prev = fb->timestamp.tv_sec;
+        Serial.printf("FPS: %d\n", fps);
+        fps = 0;
+    }
+    else
+    {
+        fps++;
+    }
+    // Serial.printf("size: %u, time: %lums\n", fb->len, millis() - start_ms);
 
     // int dst_width = 240;
     // int dst_height = 175;
