@@ -1,32 +1,65 @@
 #include <Arduino.h>
-#include <SPI.h>
-#include <font/u8g2_font_unifont_t_chinese4.h>
-#include <Arduino_GFX_Library.h>
-#include <camera.h>
-#include <scale.h>
+#include <esp_camera.h>
 
-// 背光引脚
-#define BLO 21
+// PIN Map
+#define CAM_PIN_PWDN 15  // power down is not used
+#define CAM_PIN_RESET 42 // software reset will be performed
+#define CAM_PIN_XCLK 0
+#define CAM_PIN_SDA 10 // 数据
+#define CAM_PIN_SCL 9  // 时钟
 
-SPIClass spi(1);
-Arduino_DataBus *bus = nullptr;
-Arduino_ST7789 *gfx = nullptr;
+// 像素相关配置
+#define CAM_PIN_D7 8
+#define CAM_PIN_D6 7
+#define CAM_PIN_D5 6
+#define CAM_PIN_D4 5
+#define CAM_PIN_D3 4
+#define CAM_PIN_D2 3
+#define CAM_PIN_D1 2
+#define CAM_PIN_D0 1
+#define CAM_PIN_VSYNC 46
+#define CAM_PIN_HREF 45
+#define CAM_PIN_PCLK 41
+
+static camera_config_t camera_config2 = {
+    .pin_pwdn = CAM_PIN_PWDN,
+    .pin_reset = CAM_PIN_RESET,
+    .pin_xclk = CAM_PIN_XCLK,
+    .pin_sccb_sda = CAM_PIN_SDA,
+    .pin_sccb_scl = CAM_PIN_SCL,
+
+    .pin_d7 = CAM_PIN_D7,
+    .pin_d6 = CAM_PIN_D6,
+    .pin_d5 = CAM_PIN_D5,
+    .pin_d4 = CAM_PIN_D4,
+    .pin_d3 = CAM_PIN_D3,
+    .pin_d2 = CAM_PIN_D2,
+    .pin_d1 = CAM_PIN_D1,
+    .pin_d0 = CAM_PIN_D0,
+    .pin_vsync = CAM_PIN_VSYNC,
+    .pin_href = CAM_PIN_HREF,
+    .pin_pclk = CAM_PIN_PCLK,
+
+    .xclk_freq_hz = 16000000,
+    .ledc_timer = LEDC_TIMER_0,
+    .ledc_channel = LEDC_CHANNEL_0,
+
+    .pixel_format = PIXFORMAT_JPEG, // YUV422,GRAYSCALE,RGB565,JPEG
+    .frame_size = FRAMESIZE_SVGA,   // FRAMESIZE_CIF,      // 400x296    33ms
+                                    // FRAMESIZE_HVGA,     // 480x320    67ms
+                                    // FRAMESIZE_SVGA,     // 800x600    67ms
+                                    // FRAMESIZE_HD,       // 1280x720   133ms
+                                    // FRAMESIZE_UXGA,     // 1600x1200  133ms
+
+    .jpeg_quality = 10,                // 0-63 lower number means higher quality
+    .fb_count = 2,                     // if fb_count more than one, the driver will work in continuous mode.
+    .fb_location = CAMERA_FB_IN_PSRAM, // esp32 s3 使用psram
+    .grab_mode = CAMERA_GRAB_LATEST    // CAMERA_GRAB_LATEST. Sets when buffers should be filled
+};
 
 void setup()
 {
     Serial.begin(9600);
-    bus = new Arduino_HWSPI(39, 40, 48, 47, -1, &spi);
-    gfx = new Arduino_ST7789(bus, 38, 0, true, 240, 240);
-
-    // 背光亮起来
-    pinMode(BLO, OUTPUT);
-    digitalWrite(BLO, HIGH);
-
-    if (!gfx->begin())
-    {
-        Serial.println("ST7789 failed!");
-    }
-    Serial.println("ST7789 initialization done!");
 
     if (esp_camera_init(&camera_config2) != ESP_OK)
     {
@@ -34,17 +67,6 @@ void setup()
         return;
     }
     Serial.println("Camera init success!");
-
-    gfx->setRotation(0);
-    gfx->fillScreen(BLACK);
-    gfx->setFont(u8g2_font_unifont_t_chinese4);
-    gfx->setUTF8Print(true);
-    gfx->setTextColor(WHITE);
-
-    gfx->setCursor(0, 20);
-    gfx->print("Hello 世界!");
-
-    gfx->setCursor(0, 0);
 }
 
 time_t prev = 0;
@@ -52,7 +74,6 @@ int fps = 0;
 
 void loop()
 {
-    long start_ms = millis();
     camera_fb_t *fb = esp_camera_fb_get();
     if (!fb)
     {
@@ -70,21 +91,6 @@ void loop()
     {
         fps++;
     }
-    // Serial.printf("size: %u, time: %lums\n", fb->len, millis() - start_ms);
 
-    // int dst_width = 240;
-    // int dst_height = 175;
-
-    // uint16_t *dst = (uint16_t *)malloc(dst_width * dst_height * sizeof(uint16_t));
-    // if (dst == nullptr)
-    // {
-    //     Serial.println("Memory allocation failed");
-    //     return;
-    // }
-    // scaleImage((uint16_t *)fb->buf, dst, fb->width, fb->height, dst_width, dst_height);
-
-    // gfx->draw16bitBeRGBBitmap(0, (240 - dst_height) / 2, dst, dst_width, dst_height);
-
-    // free(dst);
     esp_camera_fb_return(fb);
 }
