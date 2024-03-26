@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-void scaleImage01(const uint16_t *src, uint16_t *dst, int srcWidth, int srcHeight, int dstWidth, int dstHeight)
+void scaleImage(const uint16_t *src, uint16_t *dst, int srcWidth, int srcHeight, int dstWidth, int dstHeight)
 {
     float x_ratio = srcWidth / (float)dstWidth;
     float y_ratio = srcHeight / (float)dstHeight;
@@ -15,7 +15,7 @@ void scaleImage01(const uint16_t *src, uint16_t *dst, int srcWidth, int srcHeigh
     }
 }
 
-void scaleImage(uint16_t *originalImage, uint16_t *scaledImage, int srcWidth, int srcHeight, int dstWidth, int dstHeight)
+void scaleRGB565Image(uint16_t *originalImage, uint16_t *scaledImage, int srcWidth, int srcHeight, int dstWidth, int dstHeight)
 {
     // 计算水平和垂直缩放比例（放大倍数的倒数）
     int xScale = (srcWidth << 16) / dstWidth;
