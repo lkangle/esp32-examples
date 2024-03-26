@@ -10,7 +10,6 @@
             "includePath": [
                 "/Users/likangle/Desktop/McuProjects/esp32s3-demo/include",
                 "/Users/likangle/Desktop/McuProjects/esp32s3-demo/src",
-                "/Users/likangle/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 "/Users/likangle/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/newlib/platform_include",
                 "/Users/likangle/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/freertos/include",
                 "/Users/likangle/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/freertos/include/esp_additions/freertos",
@@ -238,6 +237,7 @@
                 "/Users/likangle/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                 "/Users/likangle/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                 "/Users/likangle/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
+                "/Users/likangle/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 ""
             ],
             "browse": {
@@ -245,7 +245,6 @@
                 "path": [
                     "/Users/likangle/Desktop/McuProjects/esp32s3-demo/include",
                     "/Users/likangle/Desktop/McuProjects/esp32s3-demo/src",
-                    "/Users/likangle/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     "/Users/likangle/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/newlib/platform_include",
                     "/Users/likangle/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/freertos/include",
                     "/Users/likangle/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/freertos/include/esp_additions/freertos",
@@ -473,6 +472,7 @@
                     "/Users/likangle/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                     "/Users/likangle/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                     "/Users/likangle/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
+                    "/Users/likangle/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     ""
                 ]
             },

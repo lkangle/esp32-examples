@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "soc_caps.h": "c",
+        "ledc.h": "c"
+    }
+}

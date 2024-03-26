@@ -4,9 +4,9 @@
 // PIN Map
 #define CAM_PIN_PWDN 15  // power down is not used
 #define CAM_PIN_RESET 42 // software reset will be performed
-#define CAM_PIN_XCLK 0
-#define CAM_PIN_SDA 10 // 数据
-#define CAM_PIN_SCL 9  // 时钟
+#define CAM_PIN_XCLK -1  // external clock not used
+#define CAM_PIN_SDA 10   // 数据
+#define CAM_PIN_SCL 9    // 时钟
 
 // 像素相关配置
 #define CAM_PIN_D7 8
@@ -40,16 +40,16 @@ static camera_config_t camera_config2 = {
     .pin_href = CAM_PIN_HREF,
     .pin_pclk = CAM_PIN_PCLK,
 
-    .xclk_freq_hz = 16000000,
+    .xclk_freq_hz = 20000000,
     .ledc_timer = LEDC_TIMER_0,
     .ledc_channel = LEDC_CHANNEL_0,
 
     .pixel_format = PIXFORMAT_JPEG, // YUV422,GRAYSCALE,RGB565,JPEG
-    .frame_size = FRAMESIZE_SVGA,   // FRAMESIZE_CIF,      // 400x296    33ms
-                                    // FRAMESIZE_HVGA,     // 480x320    67ms
-                                    // FRAMESIZE_SVGA,     // 800x600    67ms
-                                    // FRAMESIZE_HD,       // 1280x720   133ms
-                                    // FRAMESIZE_UXGA,     // 1600x1200  133ms
+    .frame_size = FRAMESIZE_SVGA,   // FRAMESIZE_CIF,      // 400x296    33ms  30fps
+                                    // FRAMESIZE_HVGA,     // 480x320    67ms  14fps
+                                    // FRAMESIZE_SVGA,     // 800x600    67ms  14fps
+                                    // FRAMESIZE_HD,       // 1280x720   133ms 7fps
+                                    // FRAMESIZE_UXGA,     // 1600x1200  133ms 7fps
 
     .jpeg_quality = 10,                // 0-63 lower number means higher quality
     .fb_count = 2,                     // if fb_count more than one, the driver will work in continuous mode.
@@ -67,6 +67,10 @@ void setup()
         return;
     }
     Serial.println("Camera init success!");
+
+    // 修改寄存器CLKRC值为0x80,开启倍频
+    sensor_t *s = esp_camera_sensor_get();
+    s->set_reg(s, 0x0111, 0xFF, 0x80);
 }
 
 time_t prev = 0;
