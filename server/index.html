@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        .x-box {
+            width: 500px;
+        }
+
+        .x-box canvas {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="x-box">
+        <canvas id="canvas" width="1600" height="1200"></canvas>
+    </div>
+
+    <script>
+        async function* streamAsyncIterable(stream) {
+            const reader = stream.getReader();
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        return;
+                    }
+                    yield value;
+                }
+            } finally {
+                reader.releaseLock();
+            }
+        }
+
+        async function loadBase64(base64) {
+            return new Promise((resolve, reject) => {
+                let img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = base64;
+            });
+        }
+
+        let canvas = document.getElementById('canvas');
+        /**
+         * @type {CanvasRenderingContext2D}
+         */
+        let ctx = canvas.getContext('2d');
+
+        const draw = async (text) => {
+            let base64 = text.replace("data: ", "data:image/jpeg;base64,")
+
+            try {
+                let img = await loadBase64(base64);
+                ctx.drawImage(img, 0, 0);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function sse() {
+            const resp = await fetch("http://192.168.31.122:13000/pull/data")
+
+            let fullText = '';
+            for await (const chunk of streamAsyncIterable(resp.body)) {
+                let text = new TextDecoder("utf-8").decode(chunk);
+
+                if (text.startsWith("data: ")) {
+                    if (fullText) {
+                        draw(fullText);
+
+                        fullText = '';
+                    }
+                    fullText = text;
+                } else {
+                    fullText = fullText + text;
+                }
+            }
+        }
+
+        sse();
+    </script>
+</body>
+
+</html>

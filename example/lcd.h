@@ -16,7 +16,7 @@ public:
       auto cfg = _bus_instance.config(); // 获得总线配置的结构。
 
       // SPI设定
-      cfg.spi_host = SPI3_HOST;  // 选择要使用的SPI ESP32-S2,C3 : SPI2_HOST 或 SPI3_HOST / ESP32 : VSPI_HOST 或 HSPI_HOST
+      cfg.spi_host = VSPI_HOST;  // 选择要使用的SPI ESP32-S2,C3 : SPI2_HOST 或 SPI3_HOST / ESP32 : VSPI_HOST 或 HSPI_HOST
                                  // * 随着ESP-IDF版本的升级，VSPI_HOST , HSPI_HOST的描述被废弃了，所以如果发生错误，请使用SPI2_HOST ,
       cfg.spi_mode = 0;          // 设置SPI通信模式(0 ~ 3)
       cfg.freq_write = 80000000; // 发送时的SPI时钟（最大80MHz，四舍五入为80MHz的整数）。
@@ -27,10 +27,11 @@ public:
       cfg.dma_channel = SPI_DMA_CH_AUTO; // 设置要使用的DMA通道（0=不使用DMA/1=1ch/2=ch/SPI_DMA_CH_AUTO=auto设置）
                                          // 随着ESP-IDF版本的升级，现在推荐使用SPI_DMA_CH_AUTO（自动设置）作为DMA通道，1ch和2ch被弃用。
 
-      cfg.pin_sclk = 16; // 设置SPI SCLK引脚编号
-      cfg.pin_mosi = 17; // 设置SPI的MOSI引脚编号
+      cfg.pin_sclk = 18; // 设置SPI SCLK引脚编号
+      cfg.pin_mosi = 23; // 设置SPI的MOSI引脚编号
       cfg.pin_miso = -1; // 设置SPI的MISO针脚编号（-1 = 禁用）。
-      cfg.pin_dc = 21;   // 设置SPI的D/C针脚编号（-1 = 禁用）。
+      cfg.pin_dc = 13;   // 设置SPI的D/C针脚编号（-1 = 禁用）。
+                         // 当与SD卡共同使用SPI总线时，必须无遗漏地设置MISO。
 
       _bus_instance.config(cfg);              // //反映总线上的配置值。
       _panel_instance.setBus(&_bus_instance); /// 设置屏幕总线。
@@ -39,7 +40,7 @@ public:
     {                                      // バックライト制御の設定を行います。（必要なければ削除）
       auto cfg = _light_instance.config(); // バックライト設定用の構造体を取得します。
 
-      cfg.pin_bl = 39;     // バックライトが接続されているピン番号
+      cfg.pin_bl = 12;     // バックライトが接続されているピン番号
       cfg.invert = false;  // バックライトの輝度を反転させる場合 true
       cfg.freq = 44100;    // バックライトのPWM周波数
       cfg.pwm_channel = 7; // 使用するPWMのチャンネル番号
@@ -51,8 +52,8 @@ public:
     {                                      // 配置显示面板控制设置。
       auto cfg = _panel_instance.config(); // 获取屏幕配置的结构。。
 
-      cfg.pin_cs = 40;   // 连接CS的引脚编号（-1 = 禁用）。
-      cfg.pin_rst = 18;  // 连接RST的引脚编号 (-1 = 禁用)
+      cfg.pin_cs = 5;    // 连接CS的引脚编号（-1 = 禁用）。
+      cfg.pin_rst = 14;  // 连接RST的引脚编号 (-1 = 禁用)
       cfg.pin_busy = -1; // 连接BUSY的引脚编号 (-1 = 禁用)
 
       // * 下面的设置对每个面板都有一般的默认值，如果你对某个项目不确定，可以把它注释出来并试一试。
