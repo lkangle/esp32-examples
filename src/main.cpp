@@ -1,53 +1,48 @@
 #include <Arduino.h>
-#include <Arduino_GFX_Library.h>
-#include <JPEGDEC.h>
-#include <SPI.h>
-#include <esp_jpg_decode.h>
 #include "camera.h"
-#include "scale.h"
+#include "screen/lcd.h"
+#include <WiFi.h>
 
 #define BLO 21
+#define UX_QUEUE_LENGTH 5
 
-static JPEGDEC djpeg;
+xQueueHandle xqh = NULL;
 
-SPIClass spi(1);
-Arduino_DataBus *bus = nullptr;
-Arduino_ST7789 *gfx = nullptr;
-
-int JPEGDraw(JPEGDRAW *pDraw)
-{
-    gfx->draw16bitBeRGBBitmap(pDraw->x + 20, pDraw->y + 60,  pDraw->pPixels, pDraw->iWidth, pDraw->iHeight);
-    return 1;
-}
-
-void jpeg_decode(camera_fb_t *fb)
-{
-    if (!fb || !gfx)
-    {
+void pushJpegBuf(camera_fb_t *fb) {
+    if (xqh == NULL) {
         return;
     }
-
-    if (djpeg.openRAM(fb->buf, fb->len, JPEGDraw))
-    {
-        djpeg.setPixelType(RGB565_BIG_ENDIAN);
-        djpeg.decode(0, 0, JPEG_SCALE_QUARTER);
-        djpeg.close();
+    
+    uint8_t *buf = (uint8_t*)heap_caps_malloc(fb->len * sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+    if (buf == NULL) {
+        Serial.println("Buffer Malloc Fail.");
+        return;
     }
-    else
-    {
-        Serial.println("JPEG decode failed");
+    memcpy(buf, fb->buf, fb->len);
+
+    JpegData jd = {
+        .buf = buf,
+        .len = fb->len
+    };
+
+    if (xQueueSend(xqh, &jd, 10) != pdPASS) {
+        heap_caps_free(buf);
     }
 }
 
 void setup()
 {
     Serial.begin(9600);
+    WiFi.mode(WIFI_OFF);
+
     if (esp_camera_init(&cam_config) != ESP_OK)
     {
         Serial.println("Camera init failed");
         return;
     }
     Serial.println("Camera init success!");
+
+    xqh = xQueueCreate(UX_QUEUE_LENGTH, sizeof(JpegData));
 
     // 修改寄存器CLKRC值为0x80,开启倍频
     sensor_t *s = esp_camera_sensor_get();
@@ -57,19 +52,8 @@ void setup()
     pinMode(BLO, OUTPUT);
     digitalWrite(BLO, HIGH);
 
-    // 初始化屏幕
-    bus = new Arduino_HWSPI(39, 40, 48, 47, -1, &spi);
-    gfx = new Arduino_ST7789(bus, 38, 0, true, 240, 240);
-
-    gfx->begin();
-    gfx->fillScreen(BLACK);
-    
-    gfx->setTextSize(2);
-    gfx->setTextColor(WHITE);
-    gfx->setCursor(72, 20);
-    gfx->printf("ESP32 S3");
-
-    Serial.println("Setup done");
+    // 在核心0上启动显示任务
+    xTaskCreatePinnedToCore(displayTask, "lcd_display", 8192*15, &xqh, 1, NULL, 0);
 }
 
 time_t prev = 0;
@@ -84,6 +68,8 @@ void loop()
         return;
     }
 
+    pushJpegBuf(fb);
+
     if (fb->timestamp.tv_sec != prev)
     {
         prev = fb->timestamp.tv_sec;
@@ -94,8 +80,6 @@ void loop()
     {
         fps++;
     }
-
-    jpeg_decode(fb);
 
     esp_camera_fb_return(fb);
 }

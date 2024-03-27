@@ -1,7 +1,9 @@
 {
     "files.associations": {
         "soc_caps.h": "c",
-        "ledc.h": "c"
+        "ledc.h": "c",
+        "lcd.h": "c",
+        "arduino_gfx_library.h": "c"
     },
     "editor.formatOnSave": false
 }
