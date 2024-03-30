@@ -5,5 +5,5 @@
         "lcd.h": "c",
         "arduino_gfx_library.h": "c"
     },
-    "editor.formatOnSave": false
+    "editor.formatOnSave": true
 }

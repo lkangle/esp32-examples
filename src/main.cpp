@@ -1,85 +1,56 @@
 #include <Arduino.h>
-#include "camera.h"
-#include "screen/lcd.h"
 #include <WiFi.h>
+#include <Arduino_GFX_Library.h>
 
-#define BLO 21
-#define UX_QUEUE_LENGTH 5
+// 背光
+#define PIN_BLO 9
+#define TFT_DC 11
+#define TFT_CS 12
+#define PIN_WR 14
+#define PIN_RD 13
+#define PIN_RST 10
+#define PIN_D0 18
+#define PIN_D1 8
+#define PIN_D2 17
+#define PIN_D3 7
+#define PIN_D4 16
+#define PIN_D5 6
+#define PIN_D6 15
+#define PIN_D7 5
+#define PIN_D8 41
+#define PIN_D9 4
+#define PIN_D10 42
+#define PIN_D11 3
+#define PIN_D12 45
+#define PIN_D13 2
+#define PIN_D14 46
+#define PIN_D15 1
 
-xQueueHandle xqh = NULL;
-
-void pushJpegBuf(camera_fb_t *fb) {
-    if (xqh == NULL) {
-        return;
-    }
-    
-    uint8_t *buf = (uint8_t*)heap_caps_malloc(fb->len * sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-    if (buf == NULL) {
-        Serial.println("Buffer Malloc Fail.");
-        return;
-    }
-    memcpy(buf, fb->buf, fb->len);
-
-    JpegData jd = {
-        .buf = buf,
-        .len = fb->len
-    };
-
-    if (xQueueSend(xqh, &jd, 10) != pdPASS) {
-        heap_caps_free(buf);
-    }
-}
+Arduino_DataBus *bus = new Arduino_ESP32LCD8(
+    TFT_DC, TFT_CS, PIN_WR, PIN_RD,
+    PIN_D0, PIN_D1, PIN_D2, PIN_D3, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
+Arduino_ST7796 *gfx = nullptr;
 
 void setup()
 {
     Serial.begin(9600);
     WiFi.mode(WIFI_OFF);
 
-    if (esp_camera_init(&cam_config) != ESP_OK)
-    {
-        Serial.println("Camera init failed");
-        return;
-    }
-    Serial.println("Camera init success!");
+    gfx = new Arduino_ST7796(bus, PIN_RST, 3, true, 320, 480);
 
-    xqh = xQueueCreate(UX_QUEUE_LENGTH, sizeof(JpegData));
+    gfx->begin();
+    gfx->fillScreen(BLACK);
 
-    // 修改寄存器CLKRC值为0x80,开启倍频
-    sensor_t *s = esp_camera_sensor_get();
-    s->set_reg(s, 0x0111, 0xFF, 0x80);
+    gfx->setTextSize(2);
+    gfx->setTextColor(WHITE);
+    gfx->println("Hello World");
 
-    // 背光亮起来
-    pinMode(BLO, OUTPUT);
-    digitalWrite(BLO, HIGH);
+    delay(500);
 
-    // 在核心0上启动显示任务
-    xTaskCreatePinnedToCore(displayTask, "lcd_display", 8192*15, &xqh, 1, NULL, 0);
+    pinMode(PIN_BLO, OUTPUT);
+    digitalWrite(PIN_BLO, 1);
 }
-
-time_t prev = 0;
-int fps = 0;
 
 void loop()
 {
-    camera_fb_t *fb = esp_camera_fb_get();
-    if (!fb)
-    {
-        Serial.println("Camera capture failed");
-        return;
-    }
-
-    pushJpegBuf(fb);
-
-    if (fb->timestamp.tv_sec != prev)
-    {
-        prev = fb->timestamp.tv_sec;
-        Serial.printf("FPS: %d\n", fps);
-        fps = 0;
-    }
-    else
-    {
-        fps++;
-    }
-
-    esp_camera_fb_return(fb);
 }
