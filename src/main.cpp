@@ -1,56 +1,41 @@
 #include <Arduino.h>
-#include <WiFi.h>
-#include <Arduino_GFX_Library.h>
+#include "lcd.h"
+#include "net.h"
 
-// 背光
-#define PIN_BLO 9
-#define TFT_DC 11
-#define TFT_CS 12
-#define PIN_WR 14
-#define PIN_RD 13
-#define PIN_RST 10
-#define PIN_D0 18
-#define PIN_D1 8
-#define PIN_D2 17
-#define PIN_D3 7
-#define PIN_D4 16
-#define PIN_D5 6
-#define PIN_D6 15
-#define PIN_D7 5
-#define PIN_D8 41
-#define PIN_D9 4
-#define PIN_D10 42
-#define PIN_D11 3
-#define PIN_D12 45
-#define PIN_D13 2
-#define PIN_D14 46
-#define PIN_D15 1
+LGFX gfx;
 
-Arduino_DataBus *bus = new Arduino_ESP32LCD8(
-    TFT_DC, TFT_CS, PIN_WR, PIN_RD,
-    PIN_D0, PIN_D1, PIN_D2, PIN_D3, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
-Arduino_ST7796 *gfx = nullptr;
+void handleJpeg(uint8_t *data, size_t len)
+{
+}
 
 void setup()
 {
     Serial.begin(9600);
-    WiFi.mode(WIFI_OFF);
+    WiFi.mode(WIFI_STA);
 
-    gfx = new Arduino_ST7796(bus, PIN_RST, 3, true, 320, 480);
+    if (!gfx.begin())
+    {
+        Serial.println("屏幕初始化失败！");
+        return;
+    }
 
-    gfx->begin();
-    gfx->fillScreen(BLACK);
+    gfx.setRotation(3);
+    gfx.setBrightness(255);
+    gfx.setColorDepth(lgfx::color_depth_t::palette_8bit);
+    gfx.fillScreen(TFT_BLACK);
 
-    gfx->setTextSize(2);
-    gfx->setTextColor(WHITE);
-    gfx->println("Hello World");
-
-    delay(500);
-
-    pinMode(PIN_BLO, OUTPUT);
-    digitalWrite(PIN_BLO, 1);
+    connectWiFi();
+    readVideoStream();
 }
 
 void loop()
 {
+    gfx.fillRect(0, 0, 480, 40, TFT_BLUE);
+    gfx.fillRect(0, 40, 480, 40, TFT_RED);
+    gfx.fillRect(0, 80, 480, 40, TFT_GREEN);
+    gfx.fillRect(0, 120, 480, 40, TFT_CYAN);
+    gfx.fillRect(0, 160, 480, 40, TFT_WHITE);
+    gfx.fillRect(0, 200, 480, 40, TFT_DARKGRAY);
+    gfx.fillRect(0, 240, 480, 40, TFT_YELLOW);
+    gfx.fillRect(0, 280, 480, 40, TFT_PINK);
 }

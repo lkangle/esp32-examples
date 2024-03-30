@@ -3,7 +3,8 @@
         "soc_caps.h": "c",
         "ledc.h": "c",
         "lcd.h": "c",
-        "arduino_gfx_library.h": "c"
+        "arduino_gfx_library.h": "c",
+        "lovyangfx.hpp": "c"
     },
     "editor.formatOnSave": true
 }

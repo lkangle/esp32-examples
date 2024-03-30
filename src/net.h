@@ -1,24 +1,90 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <vector>
 
-#define WIFI_SSID "Redmi_A2204"
-#define WIFI_PASSWORD "18196623393"
+#define WIFI_SSID "CU_Y8w2"
+#define WIFI_PASSWORD "sw6pvxmz"
 
 void connectWiFi();
 void uploadImage(size_t width, size_t height, size_t size, uint8_t *imgData);
 void pushData(size_t width, size_t height, size_t size, uint8_t *data);
+void readVideoStream();
 
 void connectWiFi()
 {
-    Serial.println("Connecting to WiFi...");
+    int count = 0;
+    Serial.print("Connecting to WiFi.");
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
-        Serial.println("Connecting...");
+        Serial.print(".");
+        count++;
+        if (count > 10)
+        {
+            Serial.println("\nWiFi Connect Fail.");
+            return;
+        }
     }
 
-    Serial.printf("Connected to WiFi. IP address: %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("\nWiFi Connected. IP address: %s\n", WiFi.localIP().toString().c_str());
+}
+
+void readVideoStream()
+{
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        return;
+    }
+
+    HTTPClient http;
+    http.begin("http://192.168.1.6:10088/ss.mjpeg");
+
+    int code = http.GET();
+    if (code == 200)
+    {
+        int index = 0;
+        bool started = false;
+        std::vector<uint8_t> bytes;
+
+        WiFiClient c = http.getStream();
+        while (c.connected() && c.available() > 0)
+        {
+            int b = c.read();
+            bytes.push_back(b);
+
+            // start
+            if (index > 0 && b == 0xD8 && bytes.at(index - 1) == 0xFF)
+            {
+                started = true;
+            }
+
+            // end
+            if (started && b == 0xD9 && bytes.at(index - 1) == 0xFF)
+            {
+                uint8_t *data = bytes.data();
+                size_t len = bytes.size();
+
+                Serial.printf("read one frame, size %d\n", len);
+
+                // handleJpeg(data, len);
+
+                bytes.clear();
+                index = 0;
+                started = false;
+                continue;
+            }
+
+            index++;
+            delay(1);
+        }
+    }
+    else
+    {
+        Serial.printf("Fail. Code: %d\n", code);
+    }
+
+    http.end();
 }
 
 void uploadImage(size_t width, size_t height, size_t size, uint8_t *imgData)
