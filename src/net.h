@@ -56,13 +56,9 @@ void readVideoStream()
     int code = http.GET();
     if (code == 200)
     {
-        int buffer_size = 4096;
-        uint8_t buffer[buffer_size];
+        int buffer_size = 8192;
+        uint8_t *buffer = (uint8_t *)heap_caps_malloc(buffer_size * sizeof(uint8_t), MALLOC_CAP_DEFAULT);
         std::vector<uint8_t> chunk;
-
-        int total_size = http.getSize();
-
-        Serial.printf("content length %d\n", total_size);
 
         WiFiClient *sp = http.getStreamPtr();
 
@@ -72,43 +68,45 @@ void readVideoStream()
         while (http.connected())
         {
             int size = sp->available();
-            if (size)
+            if (size <= 0)
             {
-                int c = sp->readBytes(buffer, min(buffer_size, size));
+                continue;
+            }
 
-                int index = findEndFlag(buffer, c);
-                // 找到Jpeg结束标识
-                if (index != -1)
+            int c = sp->readBytes(buffer, min(buffer_size, size));
+
+            int index = findEndFlag(buffer, c);
+            // 找到Jpeg结束标识
+            if (index != -1)
+            {
+                chunk.insert(chunk.end(), buffer, buffer + index + 1);
+
                 {
-                    chunk.insert(chunk.end(), buffer, buffer + index + 1);
-
+                    count++;
+                    long end = millis();
+                    if (end - start >= 1e3)
                     {
-                        count++;
-                        long end = millis();
-                        if (end - start >= 1e3)
-                        {
-                            Serial.printf("frame rate: %d\n", count);
-                            start = end;
-                            count = 0;
-                        }
-                    }
-
-                    chunk.clear();
-
-                    // buffer 剩余部分存起来
-                    if (index < c - 1)
-                    {
-                        chunk.insert(chunk.end(), buffer + index + 1, buffer + c);
+                        Serial.printf("frame rate: %d\n", count);
+                        start = end;
+                        count = 0;
                     }
                 }
-                else
+
+                chunk.clear();
+
+                // buffer 剩余部分存起来
+                if (index < c - 1)
                 {
-                    chunk.insert(chunk.end(), buffer, buffer + c);
+                    chunk.insert(chunk.end(), buffer + index + 1, buffer + c);
                 }
+            }
+            else
+            {
+                chunk.insert(chunk.end(), buffer, buffer + c);
             }
         }
 
-        Serial.println("read end.");
+        heap_caps_free(buffer);
     }
     else
     {
