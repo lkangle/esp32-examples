@@ -66,8 +66,11 @@ void readVideoStream(void *ptr)
 
         WiFiClient *sp = http.getStreamPtr();
 
+        long prev = millis();
+
         while (http.connected())
         {
+
             int size = sp->available();
             if (size <= 0)
             {
@@ -85,6 +88,16 @@ void readVideoStream(void *ptr)
                 // 处理数据
                 uint8_t *data = chunk.data();
                 handleFrame(data, chunk.size());
+
+                // 限制帧率
+                {
+                    int rem = millis() - prev;
+                    if (rem < 33)
+                    {
+                        vTaskDelay(rem);
+                    }
+                    prev = millis();
+                }
 
                 chunk.clear();
                 // buffer 剩余部分存起来

@@ -31,8 +31,8 @@ void setup()
 
     queue = xQueueCreate(4, sizeof(JpegFrame));
 
-    xTaskCreatePinnedToCore(readVideoStream, "video_stream", 8192 * 2, (void *)handleFrame, 0, NULL, 0);
-    xTaskCreate(displayTask, "gfx_show", 8192 * 10, &queue, 1, NULL);
+    xTaskCreatePinnedToCore(readVideoStream, "video_stream", 8192 * 2, (void *)handleFrame, 2, NULL, 1);
+    xTaskCreatePinnedToCore(displayTask, "gfx_show", 8192 * 10, &queue, 1, NULL, 0);
 }
 
 void loop()

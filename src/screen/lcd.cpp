@@ -53,7 +53,7 @@ void displayTask(void *p)
         }
 
         // 喂狗
-        // vTaskDelay(1);
+        vTaskDelay(1);
     }
 
 end:
