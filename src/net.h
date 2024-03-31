@@ -66,8 +66,6 @@ void readVideoStream(void *ptr)
 
         WiFiClient *sp = http.getStreamPtr();
 
-        unsigned long start = millis();
-
         while (http.connected())
         {
             int size = sp->available();
@@ -85,15 +83,6 @@ void readVideoStream(void *ptr)
                 chunk.insert(chunk.end(), buffer, buffer + index + 1);
 
                 // 处理数据
-                unsigned long end = millis();
-                long pass = end - start;
-                if (pass < 33)
-                {
-                    // 在esp32中 一个tick就是1ms
-                    vTaskDelay(33 - pass);
-                }
-                start = millis();
-
                 uint8_t *data = chunk.data();
                 handleFrame(data, chunk.size());
 

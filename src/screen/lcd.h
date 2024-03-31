@@ -26,6 +26,14 @@
 #define PIN_D14 46
 #define PIN_D15 1
 
+typedef struct
+{
+    size_t length;
+    uint8_t *data;
+} JpegFrame;
+
+void displayTask(void *p);
+
 class LGFX : public lgfx::LGFX_Device
 {
 
