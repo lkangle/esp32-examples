@@ -2,8 +2,8 @@
 #include <HTTPClient.h>
 #include <vector>
 
-#define WIFI_SSID "CU_Y8w2"
-#define WIFI_PASSWORD "sw6pvxmz"
+#define WIFI_SSID "KL_1603"
+#define WIFI_PASSWORD "cbm961122"
 
 void connectWiFi();
 void uploadImage(size_t width, size_t height, size_t size, uint8_t *imgData);
@@ -30,10 +30,23 @@ void connectWiFi()
     Serial.printf("\nWiFi Connected. IP address: %s\n", WiFi.localIP().toString().c_str());
 }
 
+int findEndFlag(uint8_t *buffer, size_t size)
+{
+    for (size_t i = 0; i < size - 1; i++)
+    {
+        if (buffer[i] == 0xFF && buffer[i + 1] == 0xD9)
+        {
+            return i + 1;
+        }
+    }
+    return -1;
+}
+
 void readVideoStream()
 {
     if (WiFi.status() != WL_CONNECTED)
     {
+        Serial.println("Wifi Not Connected.");
         return;
     }
 
@@ -43,41 +56,59 @@ void readVideoStream()
     int code = http.GET();
     if (code == 200)
     {
-        int index = 0;
-        bool started = false;
-        std::vector<uint8_t> bytes;
+        int buffer_size = 4096;
+        uint8_t buffer[buffer_size];
+        std::vector<uint8_t> chunk;
 
-        WiFiClient c = http.getStream();
-        while (c.connected() && c.available() > 0)
+        int total_size = http.getSize();
+
+        Serial.printf("content length %d\n", total_size);
+
+        WiFiClient *sp = http.getStreamPtr();
+
+        long start = millis();
+        int count = 0;
+
+        while (http.connected())
         {
-            int b = c.read();
-            bytes.push_back(b);
-
-            // start
-            if (index > 0 && b == 0xD8 && bytes.at(index - 1) == 0xFF)
+            int size = sp->available();
+            if (size)
             {
-                started = true;
+                int c = sp->readBytes(buffer, min(buffer_size, size));
+
+                int index = findEndFlag(buffer, c);
+                // 找到Jpeg结束标识
+                if (index != -1)
+                {
+                    chunk.insert(chunk.end(), buffer, buffer + index + 1);
+
+                    {
+                        count++;
+                        long end = millis();
+                        if (end - start >= 1e3)
+                        {
+                            Serial.printf("frame rate: %d\n", count);
+                            start = end;
+                            count = 0;
+                        }
+                    }
+
+                    chunk.clear();
+
+                    // buffer 剩余部分存起来
+                    if (index < c - 1)
+                    {
+                        chunk.insert(chunk.end(), buffer + index + 1, buffer + c);
+                    }
+                }
+                else
+                {
+                    chunk.insert(chunk.end(), buffer, buffer + c);
+                }
             }
-
-            // end
-            if (started && b == 0xD9 && bytes.at(index - 1) == 0xFF)
-            {
-                uint8_t *data = bytes.data();
-                size_t len = bytes.size();
-
-                Serial.printf("read one frame, size %d\n", len);
-
-                // handleJpeg(data, len);
-
-                bytes.clear();
-                index = 0;
-                started = false;
-                continue;
-            }
-
-            index++;
-            delay(1);
         }
+
+        Serial.println("read end.");
     }
     else
     {
