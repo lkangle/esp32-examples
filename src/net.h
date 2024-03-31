@@ -5,10 +5,12 @@
 #define WIFI_SSID "KL_1603"
 #define WIFI_PASSWORD "cbm961122"
 
+typedef void(HandleFrameFunction)(uint8_t *data, size_t len);
+
 void connectWiFi();
 void uploadImage(size_t width, size_t height, size_t size, uint8_t *imgData);
 void pushData(size_t width, size_t height, size_t size, uint8_t *data);
-void readVideoStream();
+void readVideoStream(void *ptr);
 
 void connectWiFi()
 {
@@ -42,8 +44,10 @@ int findEndFlag(uint8_t *buffer, size_t size)
     return -1;
 }
 
-void readVideoStream()
+void readVideoStream(void *ptr)
 {
+    HandleFrameFunction *handleFrame = (HandleFrameFunction *)ptr;
+
     if (WiFi.status() != WL_CONNECTED)
     {
         Serial.println("Wifi Not Connected.");
@@ -62,8 +66,7 @@ void readVideoStream()
 
         WiFiClient *sp = http.getStreamPtr();
 
-        long start = millis();
-        int count = 0;
+        unsigned long start = millis();
 
         while (http.connected())
         {
@@ -81,19 +84,20 @@ void readVideoStream()
             {
                 chunk.insert(chunk.end(), buffer, buffer + index + 1);
 
+                // 处理数据
+                unsigned long end = millis();
+                long pass = end - start;
+                if (pass < 33)
                 {
-                    count++;
-                    long end = millis();
-                    if (end - start >= 1e3)
-                    {
-                        Serial.printf("frame rate: %d\n", count);
-                        start = end;
-                        count = 0;
-                    }
+                    // 在esp32中 一个tick就是1ms
+                    vTaskDelay(33 - pass);
                 }
+                start = millis();
+
+                uint8_t *data = chunk.data();
+                handleFrame(data, chunk.size());
 
                 chunk.clear();
-
                 // buffer 剩余部分存起来
                 if (index < c - 1)
                 {

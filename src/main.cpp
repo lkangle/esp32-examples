@@ -1,11 +1,38 @@
 #include <Arduino.h>
 #include "lcd.h"
 #include "net.h"
+#include <JPEGDEC.h>
 
 LGFX gfx;
+JPEGDEC djpeg;
 
-void handleJpeg(uint8_t *data, size_t len)
+int JPEGDraw(JPEGDRAW *pDraw)
 {
+    gfx.pushImage(pDraw->x, pDraw->y, pDraw->iWidth, pDraw->iHeight, pDraw->pPixels);
+    return 1;
+}
+
+void handleFrame(uint8_t *data, size_t len)
+{
+    void *buf = heap_caps_malloc(sizeof(uint8_t) * len, MALLOC_CAP_DEFAULT);
+    memcpy(buf, data, len);
+
+    long start = millis();
+
+    if (djpeg.openRAM((uint8_t *)buf, len, JPEGDraw))
+    {
+        djpeg.setPixelType(RGB565_BIG_ENDIAN);
+        djpeg.decode(0, 0, 0);
+        djpeg.close();
+    }
+    else
+    {
+        Serial.println("JPEG decode failed");
+    }
+
+    Serial.printf("jpeg handle time %ldms\n", millis() - start);
+
+    heap_caps_free(buf);
 }
 
 void setup()
@@ -25,7 +52,9 @@ void setup()
     gfx.fillScreen(TFT_BLACK);
 
     connectWiFi();
-    readVideoStream();
+
+    void *fp = (void *)handleFrame;
+    xTaskCreatePinnedToCore(readVideoStream, "video_stream", 8192 * 10, fp, 0, NULL, 0);
 }
 
 void loop()
