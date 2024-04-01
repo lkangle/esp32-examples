@@ -31,13 +31,8 @@ void displayTask(void *p)
 
     while (1)
     {
-        if (xQueueReceive(*queue, &jf, 10))
+        if (xQueueReceive(*queue, &jf, 10) == pdTRUE && jf.data != NULL)
         {
-            if (jf.data == NULL)
-            {
-                continue;
-            }
-
             if (djpeg.openRAM(jf.data, jf.length, JPEGDraw))
             {
                 djpeg.setPixelType(RGB565_BIG_ENDIAN);

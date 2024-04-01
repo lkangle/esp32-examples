@@ -18,7 +18,7 @@ void handleFrame(uint8_t *data, size_t len)
     // 发送失败直接丢弃
     if (xQueueSend(queue, &frame, 3) != pdTRUE)
     {
-        Serial.printf("Queue Send Fail. size: %d\n", len);
+        // Serial.printf("Queue Send Fail. size: %d\n", len);
         heap_caps_free(buf);
     }
 }

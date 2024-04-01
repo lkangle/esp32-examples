@@ -2,8 +2,8 @@
 #include <HTTPClient.h>
 #include <vector>
 
-#define WIFI_SSID "KL_1603"
-#define WIFI_PASSWORD "cbm961122"
+#define WIFI_SSID "Redmi_A2204"
+#define WIFI_PASSWORD "18196623393"
 
 typedef void(HandleFrameFunction)(uint8_t *data, size_t len);
 
@@ -55,7 +55,7 @@ void readVideoStream(void *ptr)
     }
 
     HTTPClient http;
-    http.begin("http://192.168.1.6:10088/ss.mjpeg");
+    http.begin("http://192.168.31.122:10088/ss.mjpeg");
 
     int code = http.GET();
     if (code == 200)
@@ -120,6 +120,8 @@ void readVideoStream(void *ptr)
     }
 
     http.end();
+    Serial.println("net stream task delete.");
+    vTaskDelete(NULL);
 }
 
 void uploadImage(size_t width, size_t height, size_t size, uint8_t *imgData)
