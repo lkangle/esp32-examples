@@ -1,11 +1,13 @@
 #include "lcd.h"
 #include <JPEGDEC.h>
+#include <img_converters.h>
 
 LGFX gfx;
 
 int JPEGDraw(JPEGDRAW *pDraw)
 {
-    gfx.pushImage(pDraw->x, pDraw->y, pDraw->iWidth, pDraw->iHeight, pDraw->pPixels);
+    // gfx.pushImage(pDraw->x, pDraw->y, pDraw->iWidth, pDraw->iHeight, pDraw->pPixels);
+    // Serial.printf("x: %d, y: %d, %dx%d\n", pDraw->x, pDraw->y, pDraw->iWidth, pDraw->iHeight);
     return 1;
 }
 
@@ -31,19 +33,34 @@ void displayTask(void *p)
 
     while (1)
     {
+        long start = millis();
         if (xQueueReceive(*queue, &jf, 10) == pdTRUE && jf.data != NULL)
         {
-            if (djpeg.openRAM(jf.data, jf.length, JPEGDraw))
+            uint8_t *rgb565 = (uint8_t *)heap_caps_malloc(sizeof(uint8_t) * 320 * 480 * 3, MALLOC_CAP_DEFAULT);
+
+            if (jpg2rgb565(jf.data, jf.length, rgb565, JPG_SCALE_NONE))
             {
-                djpeg.setPixelType(RGB565_BIG_ENDIAN);
-                djpeg.decode(0, 0, 0);
-                djpeg.close();
+                Serial.printf("JPEG decode success. use time %ldms\n", millis() - start);
             }
             else
             {
                 Serial.println("JPEG decode failed");
             }
 
+            // if (djpeg.openRAM(jf.data, jf.length, JPEGDraw))
+            // {
+            //     djpeg.setPixelType(RGB565_BIG_ENDIAN);
+            //     djpeg.decode(0, 0, 0);
+            //     djpeg.close();
+
+            //     Serial.printf("jpeg decoder use time %ldms\n", millis() - start);
+            // }
+            // else
+            // {
+            //     Serial.println("JPEG decode failed");
+            // }
+
+            heap_caps_free(rgb565);
             heap_caps_free(jf.data);
         }
 

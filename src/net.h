@@ -2,8 +2,8 @@
 #include <HTTPClient.h>
 #include <vector>
 
-#define WIFI_SSID "Redmi_A2204"
-#define WIFI_PASSWORD "18196623393"
+#define WIFI_SSID "Mini13"
+#define WIFI_PASSWORD "19961122"
 
 typedef void(HandleFrameFunction)(uint8_t *data, size_t len);
 
@@ -51,11 +51,11 @@ void readVideoStream(void *ptr)
     if (WiFi.status() != WL_CONNECTED)
     {
         Serial.println("Wifi Not Connected.");
-        return;
+        return vTaskDelete(NULL);
     }
 
     HTTPClient http;
-    http.begin("http://192.168.31.122:10088/ss.mjpeg");
+    http.begin("http://172.20.10.2:10088/ss.mjpeg");
 
     int code = http.GET();
     if (code == 200)
