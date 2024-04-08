@@ -1,48 +1,165 @@
+#include "FS.h"
+#include "SD.h"
+#include "SPI.h"
+#include <SD_MMC.h>
 #include <Arduino.h>
-#include "screen/lcd.h"
-#include "net.h"
-#include <JPEGDEC.h>
 
-xQueueHandle queue;
+#define D2 7
+#define D3 8
+#define CMD 9
+#define CLK 10
+#define D0 11
+#define D1 12
 
-void handleFrame(uint8_t *data, size_t len)
+#define TEST_FILE_SIZE (4 * 1024 * 1024)
+
+void testFileIO(fs::FS &fs, const char *path)
 {
-    void *buf = heap_caps_malloc(sizeof(uint8_t) * len, MALLOC_CAP_DEFAULT);
-    memcpy(buf, data, len);
+    File file = fs.open(path, FILE_WRITE, true);
 
-    JpegFrame frame = {
-        .length = len,
-        .data = (uint8_t *)buf,
-    };
+    char test_chunk[] = "hello";
+    int chunk_size = sizeof(test_chunk);
+    int loop = TEST_FILE_SIZE / chunk_size;
 
-    // 发送失败直接丢弃
-    if (xQueueSend(queue, &frame, 3) != pdTRUE)
+    uint32_t start = millis();
+
+    if (file)
     {
-        // Serial.printf("Queue Send Fail. size: %d\n", len);
-        heap_caps_free(buf);
+        while (loop--)
+        {
+            if (file.print(test_chunk) <= 0)
+            {
+                Serial.println("Write Fail.");
+                break;
+            }
+        }
+        file.close();
+
+        uint32_t time_used = millis() - start;
+        Serial.printf("Write file used: %ld ms, %f KB/s\r\n", time_used, (float)TEST_FILE_SIZE / time_used);
     }
+    else
+    {
+        Serial.println("Failed to open file for writing");
+    }
+
+    file = fs.open(path);
+    if (!file)
+    {
+        Serial.println("Failed to open file for reading");
+        return;
+    }
+
+    start = millis();
+    loop = TEST_FILE_SIZE / chunk_size;
+
+    while (loop--)
+    {
+        if (file.readBytes(test_chunk, chunk_size) <= 0)
+        {
+            break;
+        }
+    }
+    file.close();
+
+    uint32_t time_used = millis() - start;
+    Serial.printf("Read file used: %ld ms, %f KB/s\r\n", time_used, (float)TEST_FILE_SIZE / time_used);
+}
+
+void testSPISd()
+{
+    SPIClass spi(0);
+    spi.begin(CLK, D0, CMD, D3);
+
+    if (SD.begin(D3, spi, 20000000) != pdPASS)
+    {
+        Serial.println("sd init fail.");
+        return;
+    }
+
+    uint8_t cardType = SD.cardType();
+
+    if (cardType == CARD_NONE)
+    {
+        Serial.println("No SD card attached");
+        return;
+    }
+
+    Serial.print("SD Card Type: ");
+    if (cardType == CARD_MMC)
+    {
+        Serial.println("MMC");
+    }
+    else if (cardType == CARD_SD)
+    {
+        Serial.println("SDSC");
+    }
+    else if (cardType == CARD_SDHC)
+    {
+        Serial.println("SDHC");
+    }
+    else
+    {
+        Serial.println("UNKNOWN");
+    }
+
+    uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+    Serial.printf("SD Card Size: %lluMB\n", cardSize);
+
+    testFileIO(SD, "/abc.txt");
+}
+
+void testSDMMC()
+{
+    if (!SD_MMC.setPins(CLK, CMD, D0))
+    {
+        Serial.println("SDMMC Pins change failed!");
+        return;
+    }
+    if (!SD_MMC.begin("/sdcard", true))
+    {
+        Serial.println("sdmmc init fail.");
+        return;
+    }
+
+    uint8_t cardType = SD_MMC.cardType();
+
+    if (cardType == CARD_NONE)
+    {
+        Serial.println("No SD_MMC card attached");
+        return;
+    }
+
+    Serial.print("SD_MMC Card Type: ");
+    if (cardType == CARD_MMC)
+    {
+        Serial.println("MMC");
+    }
+    else if (cardType == CARD_SD)
+    {
+        Serial.println("SDSC");
+    }
+    else if (cardType == CARD_SDHC)
+    {
+        Serial.println("SDHC");
+    }
+    else
+    {
+        Serial.println("UNKNOWN");
+    }
+
+    uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+    Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
+
+    testFileIO(SD_MMC, "/mmc.txt");
 }
 
 void setup()
 {
     Serial.begin(9600);
-    WiFi.mode(WIFI_STA);
-    connectWiFi();
-
-    queue = xQueueCreate(4, sizeof(JpegFrame));
-
-    xTaskCreatePinnedToCore(readVideoStream, "video_stream", 8192 * 2, (void *)handleFrame, 2, NULL, 1);
-    xTaskCreatePinnedToCore(displayTask, "gfx_show", 8192 * 10, &queue, 1, NULL, 0);
+    testSDMMC();
 }
 
 void loop()
 {
-    // gfx.fillRect(0, 0, 480, 40, TFT_BLUE);
-    // gfx.fillRect(0, 40, 480, 40, TFT_RED);
-    // gfx.fillRect(0, 80, 480, 40, TFT_GREEN);
-    // gfx.fillRect(0, 120, 480, 40, TFT_CYAN);
-    // gfx.fillRect(0, 160, 480, 40, TFT_WHITE);
-    // gfx.fillRect(0, 200, 480, 40, TFT_DARKGRAY);
-    // gfx.fillRect(0, 240, 480, 40, TFT_YELLOW);
-    // gfx.fillRect(0, 280, 480, 40, TFT_PINK);
 }
